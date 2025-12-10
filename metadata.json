@@ -1,0 +1,8 @@
+{
+  "name": "Gemini 2.0 AI Studio",
+  "description": "A high-fidelity multimodal AI interface featuring Gemini 2.0 Flash Live API (Real-time Voice), Vision analysis, and Streaming Chat.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
