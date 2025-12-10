@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Key, X, Check } from 'lucide-react';
 import { getApiKey, setApiKey, clearApiKey, isApiKeyPresent } from '../services/geminiService';
 
 export const ApiKeyManager: React.FC = () => {
   const [apiKey, setKey] = useState<string>(getApiKey());
   const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [saved, setSaved] = useState(isApiKeyPresent());
 
   useEffect(() => {
@@ -12,6 +13,18 @@ export const ApiKeyManager: React.FC = () => {
     window.addEventListener('veggie_api_key_changed', onChange);
     return () => window.removeEventListener('veggie_api_key_changed', onChange);
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      // autofocus input field when modal opens
+      setTimeout(() => inputRef.current?.focus(), 50);
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setOpen(false);
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }
+  }, [open]);
 
   const handleSave = () => {
     setApiKey(apiKey.trim());
@@ -32,10 +45,13 @@ export const ApiKeyManager: React.FC = () => {
       <button
         aria-label={saved ? 'Gemini Key 已設定 - 點擊編輯' : '未設定 Gemini Key - 點擊設定'}
         title={saved ? 'Gemini Key 已設定 (點擊編輯)' : '未設定 Gemini Key (點擊設定)'}
-        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ${saved ? 'bg-green-100 border border-green-400 text-veggie-dark' : 'bg-yellow-50 border border-yellow-400 text-veggie-dark'}`}
+        className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors duration-150 ${saved ? 'bg-green-100 border border-green-400 text-veggie-dark' : 'bg-yellow-50 border border-yellow-400 text-veggie-dark'}`}
         onClick={() => setOpen(true)}
       >
-        <Key size={18} />
+        <Key size={16} />
+        {saved && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-600 border border-white" aria-hidden />
+        )}
       </button>
 
       {/* Modal for entering the API key */}
@@ -50,15 +66,16 @@ export const ApiKeyManager: React.FC = () => {
               </button>
             </div>
 
-            <div className="mb-4">
+              <div className="mb-4">
               <label htmlFor="gemini-key" className="block text-sm text-gray-600 mb-2">輸入你的 Gemini API Key</label>
               <input
                 id="gemini-key"
                 type="password"
                 value={apiKey}
-                onChange={(e) => setKey(e.target.value)}
+                  onChange={(e) => setKey(e.target.value)}
                 placeholder="輸入 Gemini API Key"
-                className="w-full px-3 py-2 rounded-lg border text-sm"
+                  ref={inputRef}
+                  className="w-full px-3 py-2 rounded-lg border text-sm"
                 aria-label="Gemini API Key 輸入"
               />
             </div>
