@@ -25,6 +25,8 @@ Option 1 — automatic (recommended):
 
 1. Push your code to the `main` branch on GitHub.
 2. This repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds the app and deploys the generated `dist/` to the `gh-pages` branch. The workflow runs automatically on pushes to `main`.
+ 3. If your app uses Gemini API (or other model API) and you want it to work in production, add the `GEMINI_API_KEY` repo secret in GitHub (Settings → Secrets → Actions). The workflow will pass it to the build step so the client can use it (for quick tests only).
+   - **Important**: Embedding an API key into the client bundle is insecure — the key will be visible to anyone who inspects JavaScript. For production, prefer a server-side / proxy approach so the key stays secret.
 
 Option 2 — manual (using gh-pages):
 
