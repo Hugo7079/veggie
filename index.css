@@ -1,0 +1,18 @@
+/* Minimal CSS file for build
+   This file is intentionally small to avoid build warnings.
+*/
+
+/* Tailwind CDN is already used in index.html; add a few basic styles */
+
+:root {
+  --veggie-bg: #FFFDE7;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body { margin: 0; background: var(--veggie-bg); }
+
+/* For accessibility, ensure focus outlines are visible */
+:focus { outline: 3px solid rgba(14, 112, 93, 0.25); }

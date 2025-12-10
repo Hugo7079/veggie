@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Search, Camera, X, Loader2, RefreshCcw, Image as ImageIcon } from 'lucide-react';
 import { AppMode, ChatMessage, VeggieType } from './types';
 import { AGENTS } from './data/agents';
-import { startAssessment, sendAssessmentMessage, startAgentChat, sendAgentMessage, generatePassportImage } from './services/geminiService';
+import { startAssessment, sendAssessmentMessage, startAgentChat, sendAgentMessage, generatePassportImage, isApiKeyPresent } from './services/geminiService';
 import { PassportCard } from './components/PassportCard';
+import ApiKeyManager from './components/ApiKeyManager';
 
 // Updated to 5 items as requested
 const SUGGESTION_CHIPS = ["食材重複", "好想吃肉", "身體疲憊", "蛋白質不足", "營養不均衡"];
@@ -29,6 +30,10 @@ const App: React.FC = () => {
 
   const handleStart = async () => {
     if (!userName.trim()) return;
+    if (!isApiKeyPresent()) {
+      alert('請先在右上方輸入 Gemini API Key 才能開始測驗，或在本機建立 .env.local，將 GEMINI_API_KEY 放入其中。');
+      return;
+    }
     setMode('ASSESSMENT');
     setIsLoading(true);
     try {
@@ -94,6 +99,11 @@ const App: React.FC = () => {
      
      setIsLoading(true);
      try {
+        if (!isApiKeyPresent()) {
+          alert('請先在右上方輸入 Gemini API Key 才能產生通行證。');
+          setIsLoading(false);
+          return;
+        }
         const agent = AGENTS[resultType];
         const imageUrl = await generatePassportImage(userPhoto, agent, userName);
         setGeneratedPassportUrl(imageUrl);
@@ -228,7 +238,10 @@ const App: React.FC = () => {
       {/* 1. Header Section */}
       <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6">
          <HanHanIllustration />
-         <VeggieLogo />
+         <div className="flex items-center gap-4">
+           <ApiKeyManager />
+           <VeggieLogo />
+         </div>
       </div>
 
       {/* 2. Main Card Container */}

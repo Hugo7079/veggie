@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { streamChat, IS_BROWSER_API_KEY_PRESENT } from '../services/geminiService';
+import { streamChat, isApiKeyPresent } from '../services/geminiService';
 
 export const ChatDemo: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState<boolean>(isApiKeyPresent());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -16,6 +17,12 @@ export const ChatDemo: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const onChange = () => setHasApiKey(isApiKeyPresent());
+    window.addEventListener('veggie_api_key_changed', onChange);
+    return () => window.removeEventListener('veggie_api_key_changed', onChange);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,10 +72,9 @@ export const ChatDemo: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {!IS_BROWSER_API_KEY_PRESENT && (
+      {!hasApiKey && (
         <div className="p-4 bg-yellow-600 text-white rounded mb-2 text-center">
-          沒有設定 Gemini API Key，語言模型功能在此環境中將無法使用。若要啟用：
-          請在 GitHub repository Settings → Secrets 中新增 <code>GEMINI_API_KEY</code>，並把它加到 CI 的 build step 環境變數中。
+          沒有設定 Gemini API Key，語言模型功能在此環境中將無法使用。請點右上方的鑰匙圖示，直接在網頁輸入您的 Gemini API Key (此作法會儲存在本機 localStorage)。
         </div>
       )}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">

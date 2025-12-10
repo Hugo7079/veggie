@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Activity, Radio, Volume2 } from 'lucide-react';
-import { LiveSession } from '../services/geminiService';
+import { LiveSession, isApiKeyPresent } from '../services/geminiService';
 
 export const LiveDemo: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [volume, setVolume] = useState(0);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
   const liveSessionRef = useRef<LiveSession | null>(null);
+  const [hasKey, setHasKey] = useState(isApiKeyPresent());
   
   // Visualization bars
   const bars = Array.from({ length: 12 });
 
   const toggleConnection = async () => {
+    if (!isApiKeyPresent()) {
+      alert('請先輸入 Gemini API Key (右上角鑰匙) 才能使用 Live 音訊功能。');
+      return;
+    }
+
     if (isConnected) {
       liveSessionRef.current?.disconnect();
       setIsConnected(false);
@@ -35,6 +41,11 @@ export const LiveDemo: React.FC = () => {
   };
 
   useEffect(() => {
+    const onChange = () => setHasKey(isApiKeyPresent());
+    window.addEventListener('veggie_api_key_changed', onChange);
+    return () => window.removeEventListener('veggie_api_key_changed', onChange);
+  }, []);
+
     return () => {
       // Cleanup on unmount
       if (liveSessionRef.current) {
@@ -45,6 +56,9 @@ export const LiveDemo: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {!hasKey && (
+        <div className="absolute top-4 right-4 p-3 bg-yellow-600 text-white rounded text-sm z-20">沒有設定 Gemini API Key，請在右上方鑰匙圖示設定以啟用 Live 音訊</div>
+      )}
       {/* Background Ambient Effect */}
       <div className={`absolute inset-0 transition-opacity duration-1000 ${isConnected ? 'opacity-100' : 'opacity-0'}`}>
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gemini-500/10 rounded-full blur-[100px] animate-pulse-fast"></div>

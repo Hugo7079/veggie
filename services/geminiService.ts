@@ -3,15 +3,55 @@ import { AGENTS } from "../data/agents";
 import { createPcmBlob, base64ToUint8Array, decodeAudioData } from "../utils/audioUtils";
 import { AgentProfile } from "../types";
 
-const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
-export const IS_BROWSER_API_KEY_PRESENT = !!apiKey;
-let ai: any = null;
-if (apiKey) {
-    ai = new GoogleGenAI({ apiKey });
-} else {
-    // Running in the browser without an API key: log a helpful message.
-    console.warn('Warning: GEMINI_API_KEY is not set. The app will not be able to talk to Gemini in the browser. Consider adding an API key in your build environment or using a server-side proxy.');
+const envApiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
+let runtimeApiKey = '';
+try {
+    if (typeof window !== 'undefined') {
+        runtimeApiKey = window.localStorage?.getItem('VEGGIE_GEMINI_API_KEY') || '';
+    }
+} catch (e) {
+    // ignore localStorage access errors
 }
+
+export function getApiKey(): string {
+    return runtimeApiKey || envApiKey || '';
+}
+
+export function setApiKey(key: string) {
+    runtimeApiKey = key || '';
+    try {
+        if (typeof window !== 'undefined') {
+            if (key) window.localStorage?.setItem('VEGGIE_GEMINI_API_KEY', key);
+            else window.localStorage?.removeItem('VEGGIE_GEMINI_API_KEY');
+        }
+    } catch (e) {}
+    initClient();
+    try {
+        if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+            window.dispatchEvent(new Event('veggie_api_key_changed'));
+        }
+    } catch (e) {}
+}
+
+export function clearApiKey() {
+    setApiKey('');
+}
+
+export function isApiKeyPresent(): boolean {
+    return !!getApiKey();
+}
+
+let ai: any = null;
+function initClient() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        ai = null;
+    } else {
+        ai = new GoogleGenAI({ apiKey });
+    }
+}
+
+initClient();
 
 // --- Han Han (Sorting Hat) Service ---
 
@@ -50,6 +90,7 @@ const HAN_HAN_SYSTEM_INSTRUCTION = `
 let chatSession: any = null;
 
 export const startAssessment = async (userName: string) => {
+    if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
   const model = 'gemini-2.5-flash';
   chatSession = ai.chats.create({
     model,
@@ -73,6 +114,7 @@ export const sendAssessmentMessage = async (message: string) => {
 // --- Agent Chat Service ---
 
 export const startAgentChat = async (agentId: string, history: any[]) => {
+    if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
   const agent = AGENTS[agentId];
   if (!agent) throw new Error("Agent not found");
 
@@ -110,6 +152,7 @@ export const sendAgentMessage = async (chat: any, message: string) => {
 // --- Passport Generation Service (Image Background Only) ---
 
 export const generatePassportImage = async (userPhotoBase64: string, agent: AgentProfile, userName: string) => {
+    if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
   // NOTE: We are intentionally NOT using the userPhotoBase64 here. 
   // We will generate a template background and composite the user photo in the DOM (App.tsx).
   
@@ -156,6 +199,7 @@ export const generatePassportImage = async (userPhotoBase64: string, agent: Agen
 // --- Streaming Chat Service ---
 
 export const streamChat = async (message: string, history: any[]) => {
+    if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
     const chat = ai.chats.create({
         model: 'gemini-2.5-flash',
         history: history
@@ -166,6 +210,7 @@ export const streamChat = async (message: string, history: any[]) => {
 // --- Vision Service ---
 
 export const analyzeImage = async (base64Image: string, prompt: string) => {
+    if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
     const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
     if (!matches) throw new Error("Invalid base64 image data");
     
@@ -207,6 +252,7 @@ export class LiveSession {
         this.audioContext = new AudioContextClass({ sampleRate: 24000 });
         this.inputContext = new AudioContextClass({ sampleRate: 16000 });
 
+        if (!ai) throw new Error('No API client available - please set a Gemini API key in the app settings');
         this.sessionPromise = ai.live.connect({
             model: 'gemini-2.5-flash-native-audio-preview-09-2025',
             config: {

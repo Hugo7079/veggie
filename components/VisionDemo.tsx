@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Sparkles, X, Loader2 } from 'lucide-react';
-import { analyzeImage } from '../services/geminiService';
+import { analyzeImage, isApiKeyPresent } from '../services/geminiService';
 
 export const VisionDemo: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -8,6 +8,13 @@ export const VisionDemo: React.FC = () => {
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasKey, setHasKey] = useState(isApiKeyPresent());
+
+  useEffect(() => {
+    const onChange = () => setHasKey(isApiKeyPresent());
+    window.addEventListener('veggie_api_key_changed', onChange);
+    return () => window.removeEventListener('veggie_api_key_changed', onChange);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,7 +99,7 @@ export const VisionDemo: React.FC = () => {
             />
             <button
               onClick={handleAnalyze}
-              disabled={!image || isLoading}
+              disabled={!image || isLoading || !hasKey}
               className="bg-gemini-600 hover:bg-gemini-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />}
@@ -109,6 +116,12 @@ export const VisionDemo: React.FC = () => {
           <h2 className="text-xl font-semibold">Analysis Result</h2>
         </div>
         
+        {!hasKey && (
+          <div className="p-3 mb-4 bg-yellow-600 text-white rounded text-center">
+            沒有 Genie API Key，請點右上方鑰匙圖示輸入或在本機建立 `.env.local`。此功能需 API Key 才能使用。
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-40 space-y-4">
             <Loader2 className="animate-spin text-gemini-500" size={32} />
