@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { streamChat } from '../services/geminiService';
+import { streamChat, IS_BROWSER_API_KEY_PRESENT } from '../services/geminiService';
 
 export const ChatDemo: React.FC = () => {
   const [input, setInput] = useState('');
@@ -65,6 +65,12 @@ export const ChatDemo: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
+      {!IS_BROWSER_API_KEY_PRESENT && (
+        <div className="p-4 bg-yellow-600 text-white rounded mb-2 text-center">
+          沒有設定 Gemini API Key，語言模型功能在此環境中將無法使用。若要啟用：
+          請在 GitHub repository Settings → Secrets 中新增 <code>GEMINI_API_KEY</code>，並把它加到 CI 的 build step 環境變數中。
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-50">

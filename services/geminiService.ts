@@ -3,8 +3,15 @@ import { AGENTS } from "../data/agents";
 import { createPcmBlob, base64ToUint8Array, decodeAudioData } from "../utils/audioUtils";
 import { AgentProfile } from "../types";
 
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
+export const IS_BROWSER_API_KEY_PRESENT = !!apiKey;
+let ai: any = null;
+if (apiKey) {
+    ai = new GoogleGenAI({ apiKey });
+} else {
+    // Running in the browser without an API key: log a helpful message.
+    console.warn('Warning: GEMINI_API_KEY is not set. The app will not be able to talk to Gemini in the browser. Consider adding an API key in your build environment or using a server-side proxy.');
+}
 
 // --- Han Han (Sorting Hat) Service ---
 
