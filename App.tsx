@@ -236,11 +236,14 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-veggie-bg flex flex-col items-center py-4 md:py-8 font-sans">
       
       {/* 1. Header Section */}
-      <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6">
+      <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6 relative">
          <HanHanIllustration />
          <div className="flex items-center gap-4">
-           <ApiKeyManager />
            <VeggieLogo />
+         </div>
+         {/* Floating API Key Manager so it's highly visible on all screen sizes */}
+         <div className="absolute top-3 right-6 z-50">
+           <ApiKeyManager />
          </div>
       </div>
 

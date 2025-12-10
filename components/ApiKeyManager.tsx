@@ -46,9 +46,9 @@ export const ApiKeyManager: React.FC = () => {
             placeholder="輸入 Gemini API Key"
             className="px-3 py-2 rounded-lg border text-sm"
           />
-          <button onClick={handleSave} className="bg-veggie-green text-white px-3 py-2 rounded-lg inline-flex items-center gap-2"><Check size={16} /> 儲存</button>
-          <button onClick={() => { setEditing(false); setKey(getApiKey()); }} className="bg-white border px-3 py-2 rounded-lg">取消</button>
-          <button onClick={handleClear} className="text-red-600 border px-3 py-2 rounded-lg">清除</button>
+          <button onClick={handleSave} title="儲存 API Key" className="bg-veggie-green text-white px-3 py-2 rounded-lg inline-flex items-center gap-2"><Check size={16} /> 儲存</button>
+          <button onClick={() => { setEditing(false); setKey(getApiKey()); }} title="取消編輯" className="bg-white border px-3 py-2 rounded-lg">取消</button>
+          <button onClick={handleClear} title="清除 API Key" className="text-red-600 border px-3 py-2 rounded-lg">清除</button>
         </div>
       )}
     </div>
