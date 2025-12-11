@@ -49,9 +49,6 @@ export const ApiKeyManager: React.FC = () => {
         onClick={() => setOpen(true)}
       >
         <Key size={16} />
-        {saved && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-600 border border-white" aria-hidden />
-        )}
       </button>
 
       {/* Modal for entering the API key */}
