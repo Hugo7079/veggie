@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { Send, Search, Camera, X, Loader2, RefreshCcw, Image as ImageIcon } from 'lucide-react';
 import { AppMode, ChatMessage, VeggieType } from './types';
 import { AGENTS } from './data/agents';
@@ -6,7 +6,28 @@ import { startAssessment, sendAssessmentMessage, startAgentChat, sendAgentMessag
 import { PassportCard } from './components/PassportCard';
 import ApiKeyManager from './components/ApiKeyManager';
 
+// Extract ChatBubble outside App to prevent re-renders
+const ChatBubble = memo(({ role, text }: { role: 'user' | 'model', text: string }) => {
+  const isModel = role === 'model';
+  const bubbleClasses = isModel 
+    ? 'bg-veggie-green text-white rounded-tl-sm' 
+    : 'bg-white text-veggie-dark border border-gray-200 rounded-tr-sm';
 
+  return (
+    <div className={`flex gap-4 mb-8 ${isModel ? 'flex-row' : 'flex-row-reverse'}`}>
+      {isModel && (
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-veggie-grey border border-gray-300 flex items-center justify-center overflow-hidden" />
+        </div>
+      )}
+      <div className={`relative px-6 py-5 rounded-2xl max-w-[80%] text-lg leading-relaxed shadow-sm ${bubbleClasses}`}>
+        <div className="whitespace-pre-wrap font-medium">{text}</div>
+      </div>
+    </div>
+  );
+});
+
+ChatBubble.displayName = 'ChatBubble';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>('LANDING');
@@ -118,81 +139,15 @@ const App: React.FC = () => {
   // --- Visual Components ---
 
   const VeggieLogo: React.FC = () => (
-    <div className="flex items-center gap-3">
-      {/* 左邊 ICON */}
-      <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
-        <svg
-          viewBox="0 0 160 160"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full"
-          aria-hidden="true"
-        >
-          {/* 花朵三瓣形狀（橘色） */}
-          <g fill="#EDA63A">
-            {/* 上方圓瓣 */}
-            <circle cx="80" cy="40" r="32" />
-            {/* 左右圓瓣 */}
-            <circle cx="46" cy="72" r="30" />
-            <circle cx="114" cy="72" r="30" />
-          </g>
-
-          {/* 綠色葉子 + 桿子 + 叉子本體 */}
-          <g fill="#367B63">
-            {/* 下方大葉：半橢圓 */}
-            <path d="M32 104c0 28 20 48 48 48s48-20 48-48H32z" />
-            {/* 桿子 */}
-            <rect x="74" y="64" width="12" height="54" rx="6" />
-            {/* 叉子頭圓形 */}
-            <circle cx="80" cy="60" r="24" />
-          </g>
-
-          {/* 用橘色「挖出」三個叉齒縫隙，做出跟原圖很像的叉子形狀 */}
-          <g fill="#EDA63A">
-            {/* 中間叉齒縫隙稍微長一點 */}
-            <rect x="76.5" y="40" width="7" height="28" rx="3.5" />
-            <rect x="67" y="42" width="6" height="24" rx="3" />
-            <rect x="87" y="42" width="6" height="24" rx="3" />
-          </g>
-        </svg>
-      </div>
-
-      {/* 右邊文字區：植食旅程 + VEGGIE TRAIL */}
-      <div className="flex flex-col leading-tight">
-        <div className="text-veggie-dark font-black text-xl md:text-2xl tracking-[0.35em]">
-          <div>植食</div>
-          <div className="mt-1">旅程</div>
-        </div>
-        <div className="mt-1 text-[10px] md:text-xs font-bold tracking-[0.3em] text-[#3A5306]">
-          VEGGIE TRAIL
-        </div>
-      </div>
+    <div className="flex items-center">
+      <img src="/logo.png" alt="Veggie Trail Logo" className="h-20 md:h-24" />
     </div>
   );
 
   const HanHanIllustration = () => (
     <div className="flex items-center gap-4">
-        <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-             {/* Character SVG */}
-             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-sm">
-                 {/* Body */}
-                 <path d="M20 90C20 65 35 55 50 55C65 55 80 65 80 90" fill="black"/>
-                 {/* Face */}
-                 <circle cx="50" cy="45" r="22" fill="white" stroke="black" strokeWidth="2.5"/>
-                 {/* Cap */}
-                 <path d="M20 30 L50 15 L80 30 L50 45 Z" fill="white" stroke="black" strokeWidth="2.5" strokeLinejoin="round"/>
-                 <line x1="80" y1="30" x2="80" y2="50" stroke="black" strokeWidth="1.5"/>
-                 <circle cx="80" cy="52" r="2" fill="black"/>
-                 {/* Glasses */}
-                 <circle cx="43" cy="46" r="5" stroke="black" strokeWidth="1.5" fill="white"/>
-                 <circle cx="57" cy="46" r="5" stroke="black" strokeWidth="1.5" fill="white"/>
-                 <path d="M48 46 H52" stroke="black" strokeWidth="1.5"/>
-                 {/* Smile */}
-                 <path d="M46 55 Q50 58 54 55" stroke="black" strokeWidth="1.5" strokeLinecap="round"/>
-             </svg>
-             {/* Magnifying Glass Accessory */}
-             <div className="absolute -top-1 -right-1 bg-white rounded-full p-1.5 border-2 border-black rotate-12 shadow-sm z-10">
-                <Search size={16} className="text-black"/>
-             </div>
+        <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+             <img src="/hanhan.png" alt="韓韓" className="w-full h-full object-contain drop-shadow-sm" />
         </div>
         <div className="hidden md:block text-left">
            <h1 className="text-2xl font-black text-veggie-green tracking-wide">哈囉！我是韓韓！</h1>
@@ -203,32 +158,6 @@ const App: React.FC = () => {
     </div>
   );
 
-  const ChatBubble = ({ role, text }: { role: 'user' | 'model', text: string }) => {
-    const isModel = role === 'model';
-    // Simplified class logic to avoid conflicts
-    const bubbleClasses = isModel 
-      ? 'bg-veggie-green text-white rounded-tl-sm' 
-      : 'bg-white text-veggie-dark border border-gray-200 rounded-tr-sm';
-
-    return (
-      <div className={`flex gap-4 mb-8 ${isModel ? 'flex-row' : 'flex-row-reverse'} animate-fade-in`}>
-        {/* Avatar - Only for Model */}
-        {isModel && (
-            <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-veggie-grey border border-gray-300 flex items-center justify-center overflow-hidden">
-                   {/* Empty grey circle as per design */}
-                </div>
-            </div>
-        )}
-        
-        {/* Message Bubble */}
-        <div className={`relative px-6 py-5 rounded-2xl max-w-[80%] text-lg leading-relaxed shadow-sm ${bubbleClasses}`}>
-           <div className="whitespace-pre-wrap font-medium">{text}</div>
-        </div>
-      </div>
-    );
-  };
-
   // --- Main Render ---
 
   return (
@@ -238,11 +167,9 @@ const App: React.FC = () => {
       <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6 relative flex-shrink-0">
          <HanHanIllustration />
          <div className="flex items-center gap-4">
-           <VeggieLogo />
-         </div>
-         {/* Floating API Key Manager so it's highly visible on all screen sizes */}
-         <div className="absolute top-3 right-6 z-50">
+           {/* API Key Manager to the left of logo */}
            <ApiKeyManager />
+           <VeggieLogo />
          </div>
       </div>
 
