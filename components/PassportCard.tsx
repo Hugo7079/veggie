@@ -62,11 +62,11 @@ export const PassportCard: React.FC<PassportCardProps> = ({ generatedImage, user
         />
 
         {/* Layer 2: Overlay Content */}
-        <div className="absolute inset-0 z-10 flex flex-col p-5">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-between p-6">
             
-            {/* Top Section: User Photo */}
-            <div className="flex justify-start mb-2">
-                <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-white rotate-[-3deg]">
+            {/* Top Section: User Photo - Centered */}
+            <div className="flex justify-center pt-4">
+                <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-white rotate-[-3deg]">
                     <img 
                         src={userPhoto} 
                         alt="User" 
@@ -75,29 +75,26 @@ export const PassportCard: React.FC<PassportCardProps> = ({ generatedImage, user
                 </div>
             </div>
 
-            {/* Middle Spacer */}
-            <div className="flex-1"></div>
-
-            {/* Bottom Section: Text Info */}
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border-2 border-gray-100 flex flex-col gap-2 relative">
+            {/* Bottom Section: Text Info - Full Width */}
+            <div className="bg-white/90 backdrop-blur-sm p-5 rounded-xl shadow-lg border-2 border-gray-100 flex flex-col gap-3 w-full relative">
                  {/* Badge/Title */}
-                 <div className="absolute -top-4 right-4 bg-veggie-green text-white px-3 py-1 rounded-full text-xs font-black tracking-widest shadow-sm">
+                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-veggie-green text-white px-4 py-1 rounded-full text-xs font-black tracking-widest shadow-sm">
                     {agent.title}
                  </div>
 
-                 <div className="flex flex-col">
+                 <div className="flex flex-col text-center">
                     <h2 className="text-2xl font-black text-veggie-dark leading-none">{agent.name}</h2>
-                    <p className="text-sm font-bold text-gray-500 mt-1">{userName}</p>
+                    <p className="text-sm font-bold text-gray-500 mt-2">{userName}</p>
                  </div>
 
                  <hr className="border-gray-200" />
                  
-                 <p className="text-sm font-medium text-veggie-green italic">
+                 <p className="text-sm font-medium text-veggie-green italic text-center">
                     "{agent.quote}"
                  </p>
 
                  {/* Hashtags */}
-                 <div className="flex flex-wrap gap-1 pt-1">
+                 <div className="flex flex-wrap gap-2 justify-center pt-1">
                     {agent.tags.map(tag => (
                         <span key={tag} className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
                             {tag}

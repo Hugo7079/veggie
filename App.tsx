@@ -6,8 +6,7 @@ import { startAssessment, sendAssessmentMessage, startAgentChat, sendAgentMessag
 import { PassportCard } from './components/PassportCard';
 import ApiKeyManager from './components/ApiKeyManager';
 
-// Updated to 5 items as requested
-const SUGGESTION_CHIPS = ["食材重複", "好想吃肉", "身體疲憊", "蛋白質不足", "營養不均衡"];
+
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>('LANDING');
@@ -233,10 +232,10 @@ const App: React.FC = () => {
   // --- Main Render ---
 
   return (
-    <div className="min-h-screen bg-veggie-bg flex flex-col items-center py-4 md:py-8 font-sans">
+    <div className="h-screen bg-veggie-bg flex flex-col items-center py-4 md:py-8 font-sans overflow-hidden">
       
       {/* 1. Header Section */}
-      <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6 relative">
+      <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6 relative flex-shrink-0">
          <HanHanIllustration />
          <div className="flex items-center gap-4">
            <VeggieLogo />
@@ -248,7 +247,7 @@ const App: React.FC = () => {
       </div>
 
       {/* 2. Main Card Container */}
-      <div className="w-full max-w-5xl flex-1 mx-4 bg-veggie-card border-2 border-[#F0F0E0] rounded-[40px] shadow-soft relative overflow-hidden flex flex-col">
+      <div className="w-full max-w-5xl flex-1 mx-4 bg-veggie-card border-2 border-[#F0F0E0] rounded-[40px] shadow-soft relative overflow-hidden flex flex-col min-h-0">
          
          {/* LANDING MODE */}
          {mode === 'LANDING' && (
@@ -349,18 +348,6 @@ const App: React.FC = () => {
       {/* 3. Footer / Input Area */}
       {(mode === 'ASSESSMENT' || mode === 'RESULT') && (
         <div className="w-full max-w-5xl px-6 md:px-12 pb-2">
-           {/* Suggestion Chips - Non-clickable, 5 Items */}
-           <div className="flex gap-3 mb-4 overflow-x-auto no-scrollbar pb-1 pl-1">
-              {SUGGESTION_CHIPS.map((chip, idx) => (
-                 <div 
-                   key={idx}
-                   className="bg-veggie-chip border border-[#DCE775] text-veggie-dark font-bold px-5 py-3 rounded-xl whitespace-nowrap shadow-sm text-sm md:text-base cursor-default select-none"
-                 >
-                    {chip}
-                 </div>
-              ))}
-           </div>
-
            {/* Pill Input Bar */}
            <div className="bg-white border-2 border-gray-100 rounded-full shadow-lg p-2 pl-6 flex items-center relative transition-shadow hover:shadow-xl">
               <input
