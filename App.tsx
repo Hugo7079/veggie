@@ -17,7 +17,7 @@ const ChatBubble = memo(({ role, text }: { role: 'user' | 'model', text: string 
     <div className={`flex gap-4 mb-8 ${isModel ? 'flex-row' : 'flex-row-reverse'}`}>
       {isModel && (
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-veggie-grey border border-gray-300 flex items-center justify-center overflow-hidden" />
+          <img src="./hanhan_head.png" alt="韓韓" className="w-12 h-12 rounded-full border border-gray-300 object-cover" />
         </div>
       )}
       <div className={`relative px-6 py-5 rounded-2xl max-w-[80%] text-lg leading-relaxed shadow-sm ${bubbleClasses}`}>
@@ -218,7 +218,7 @@ const App: React.FC = () => {
                {mode === 'RESULT' && !userPhoto && (
                    <div className="flex gap-4 mb-8 animate-fade-in">
                        <div className="flex-shrink-0">
-                           <div className="w-12 h-12 rounded-full bg-veggie-grey border border-gray-300"></div>
+                           <img src="./hanhan_head.png" alt="韓韓" className="w-12 h-12 rounded-full border border-gray-300 object-cover" />
                        </div>
                        <div className="bg-veggie-green text-white px-6 py-6 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm space-y-6">
                            <p className="font-bold text-lg">您是否要生成您專屬的蔬別通行證？</p>
@@ -243,7 +243,7 @@ const App: React.FC = () => {
 
                {isLoading && (
                   <div className="flex gap-4 mb-8">
-                     <div className="w-12 h-12 rounded-full bg-veggie-grey opacity-50"></div>
+                     <img src="./hanhan_head.png" alt="韓韓" className="w-12 h-12 rounded-full border border-gray-300 object-cover opacity-50" />
                      <div className="bg-veggie-green px-6 py-4 rounded-2xl rounded-tl-sm flex items-center">
                         <Loader2 className="animate-spin text-white w-6 h-6" />
                      </div>
