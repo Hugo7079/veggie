@@ -14,6 +14,13 @@
   background-size: 100% 100%, 100% 100%, 140px 140px;
 }
 
+.clamp2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 /* Theme patterns (SVG data URIs) */
 .pattern_VEGAN {
   background-image:
