@@ -92,7 +92,7 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
           <div className="relative flex w-full h-full">
             {/* 左側：角色插畫 + 左上頭像 */}
             <div className="w-[44%] relative p-4">
-              <div className="absolute top-6 left-6 w-[120px] h-[120px] rounded-full overflow-hidden border-4 border-white/95 shadow-xl bg-white/90 z-20">
+              <div className="absolute top-6 left-6 w-[132px] h-[132px] rounded-full overflow-hidden border-4 border-white/95 shadow-xl bg-white/90 z-20">
                 <img
                   src={userPhoto}
                   alt="User"
@@ -129,7 +129,7 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
                 </div>
               </div>
 
-              <div className="flex-1 bg-white/60 border-2 border-white/90 rounded-2xl px-3 py-2 shadow-sm min-h-0">
+              <div className="flex-1 bg-white/60 border-2 border-white/90 rounded-2xl px-3 py-2 pb-10 shadow-sm min-h-0 relative">
                 <div className="text-[11px] font-black text-black/70 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
                   Type: {agent.title} ({agent.id})
                 </div>
@@ -154,6 +154,11 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
                 <div className={`text-[11px] font-black text-black/70 leading-snug ${styles.clamp2}`}>
                   Diet Advice: <span className="font-extrabold text-black/65">{agent.advice}</span>
                 </div>
+
+                {/* 透明 hover icon（圖章）放在文字框右下角，且不壓到能力條 */}
+                <div className="absolute right-3 bottom-3 w-[50px] h-[50px] rounded-full bg-white/65 border-[3px] border-white/95 shadow-lg flex items-center justify-center text-black/55">
+                  <StampIcon size={26} strokeWidth={2.5} />
+                </div>
               </div>
 
               <div className="mt-2">
@@ -162,10 +167,6 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
                 {renderAbilityBar('行動力', ecoPower, styles.progressRed)}
               </div>
             </div>
-          </div>
-
-          <div className="absolute right-4 top-4 w-[50px] h-[50px] rounded-full bg-white/75 border-[3px] border-white/95 shadow-lg flex items-center justify-center text-black/55">
-            <StampIcon size={26} strokeWidth={2.5} />
           </div>
         </div>
       </div>
