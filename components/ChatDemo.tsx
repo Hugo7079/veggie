@@ -9,6 +9,7 @@ export const ChatDemo: React.FC = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasApiKey, setHasApiKey] = useState<boolean>(isApiKeyPresent());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -19,9 +20,9 @@ export const ChatDemo: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    const onChange = () => setHasApiKey(isApiKeyPresent());
-    window.addEventListener('veggie_api_key_changed', onChange);
-    return () => window.removeEventListener('veggie_api_key_changed', onChange);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,11 +114,13 @@ export const ChatDemo: React.FC = () => {
         <form onSubmit={handleSubmit} className="relative">
           <input
             type="text"
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask something..."
             className="w-full bg-panel text-white rounded-xl pl-4 pr-12 py-4 focus:outline-none focus:ring-2 focus:ring-gemini-500 border border-gray-700 placeholder-gray-500 transition-all"
             disabled={isStreaming}
+            autoFocus
           />
           <button
             type="submit"

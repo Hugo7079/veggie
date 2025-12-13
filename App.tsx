@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Send, Search, Camera, X, Loader2, RefreshCcw, Image as ImageIcon } from 'lucide-react';
+import { Send, Search, Camera, X, Loader2, RefreshCcw, Image as ImageIcon, Download } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { AppMode, ChatMessage, VeggieType } from './types';
 import { AGENTS } from './data/agents';
 import { startAssessment, sendAssessmentMessage, startAgentChat, sendAgentMessage, generatePassportImage, isApiKeyPresent } from './services/geminiService';
@@ -39,12 +40,100 @@ const App: React.FC = () => {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [generatedPassportUrl, setGeneratedPassportUrl] = useState<string | null>(null);
   const [agentChatSession, setAgentChatSession] = useState<any>(null);
+  const [isPassportDownloading, setIsPassportDownloading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const passportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  // 在進入聊天模式時自動聚焦輸入框
+  useEffect(() => {
+    if ((mode === 'ASSESSMENT' || mode === 'RESULT')) {
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.click();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [mode]);
+
+  // 允許使用者「直接打字」就輸入到對話框（不需要先點 input）
+  useEffect(() => {
+    if (!(mode === 'ASSESSMENT' || mode === 'RESULT')) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || (active && active.isContentEditable)) return;
+
+      // 如果目前不在輸入框，將輸入導向到底部對話框（包含第一個字，不要被吃掉）
+      if (e.key.length === 1) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setInput((prev) => prev + e.key);
+        return;
+      }
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setInput((prev) => prev.slice(0, -1));
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mode]);
+
+  const handlePassportDownload = async () => {
+    if (!passportRef.current || !resultType || isPassportDownloading) return;
+    setIsPassportDownloading(true);
+    try {
+      // 等字體與圖片穩定，避免下載與畫面不同
+      const fonts = (document as any).fonts;
+      if (fonts?.ready) await fonts.ready;
+
+      const images = passportRef.current.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map(async (img) => {
+          const el = img as HTMLImageElement;
+          try {
+            if (el.decode) await el.decode();
+          } catch {
+            // ignore
+          }
+        })
+      );
+
+      const node = passportRef.current;
+      const width = Math.round(node.offsetWidth);
+      const height = Math.round(node.offsetHeight);
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio: 3,
+        width,
+        height,
+      });
+
+      const link = document.createElement('a');
+      link.download = `Veggie_Passport_${AGENTS[resultType].id}_${userName}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (e) {
+      console.error('Passport download failed:', e);
+      alert('下載失敗，請再試一次');
+    } finally {
+      setIsPassportDownloading(false);
+    }
+  };
 
   // --- Logic ---
 
@@ -255,19 +344,41 @@ const App: React.FC = () => {
 
          {/* PASSPORT DISPLAY (DOM Composed) */}
          {mode === 'PASSPORT' && generatedPassportUrl && resultType && userPhoto && (
-            <div className="h-full flex flex-col items-center justify-center p-8 animate-fade-in">
-               <PassportCard 
-                  generatedImage={generatedPassportUrl}
-                  userPhoto={userPhoto}
-                  agent={AGENTS[resultType]}
-                  userName={userName}
-               />
-               <button 
-                 onClick={() => setMode('RESULT')} 
-                 className="mt-8 text-veggie-green font-bold flex items-center gap-2 hover:bg-veggie-chip px-4 py-2 rounded-lg transition-colors"
-               >
-                  <RefreshCcw size={18} /> 返回對話
-               </button>
+            <div className="h-full flex flex-col items-center justify-center p-6 md:p-10">
+              <div className="pb-4" />
+              <PassportCard
+                ref={passportRef}
+                generatedImage={generatedPassportUrl}
+                userPhoto={userPhoto}
+                agent={AGENTS[resultType]}
+                userName={userName}
+              />
+
+              {/* 下載/返回 左右並排，不需要滾動 */}
+              <div className="mt-6 w-[540px] flex justify-between items-center">
+                <button
+                  onClick={handlePassportDownload}
+                  disabled={isPassportDownloading}
+                  className="bg-veggie-green text-white font-black px-8 py-4 rounded-2xl flex items-center gap-3 hover:bg-[#0B5C4D] transition-all shadow-lg disabled:opacity-60"
+                >
+                  {isPassportDownloading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} /> 下載中...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={20} /> 下載通行證
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setMode('RESULT')}
+                  className="bg-white text-veggie-green font-black px-8 py-4 rounded-2xl flex items-center gap-3 border-2 border-veggie-green hover:bg-veggie-chip transition-all shadow-lg"
+                >
+                  <RefreshCcw size={20} /> 返回聊天
+                </button>
+              </div>
             </div>
          )}
       </div>
@@ -278,13 +389,17 @@ const App: React.FC = () => {
            {/* Pill Input Bar */}
            <div className="bg-white border-2 border-gray-100 rounded-full shadow-lg p-2 pl-6 flex items-center relative transition-shadow hover:shadow-xl">
               <input
+                 ref={inputRef}
                  type="text"
                  value={input}
                  onChange={e => setInput(e.target.value)}
                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                 onClick={() => inputRef.current?.focus()}
+                 onFocus={() => inputRef.current?.focus()}
                  placeholder="好的我知道了！需要特別補充哪些營養和維生素呢？"
                  className="flex-1 bg-transparent focus:outline-none text-veggie-dark placeholder-gray-400 py-3 pr-14 text-base md:text-lg font-medium"
                  disabled={isLoading}
+                 autoFocus
               />
               <button 
                  onClick={handleSubmit}
