@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cookie, Egg, Flame, Fish, Leaf, Milk, Shuffle } from 'lucide-react';
+import { Cookie, Egg, Flame, Fish, Heart, Leaf, Milk, Shuffle, Zap } from 'lucide-react';
 import { AgentProfile, VeggieType } from '../types';
 
 import styles from './PassportCard.module.css';
@@ -76,13 +76,34 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
   const passportSuffix = getPassportSuffix(agent.id);
   const StampIcon = getStampIcon(agent.id);
 
+  const getPassportLabel = (type: VeggieType): string => {
+    switch (type) {
+      case 'VEGAN':
+        return 'V-Pass';
+      case 'LACTO_OVO':
+        return 'Classic-Pass';
+      case 'FIVE_PUNGENT':
+        return 'Spicy-Pass';
+      case 'PESCATARIAN':
+        return 'Ocean-Pass';
+      case 'FLEXITARIAN':
+        return 'Flow-Pass';
+      case 'LACTO':
+        return 'Milky-Pass';
+      case 'OVO':
+        return 'Sunny-Pass';
+      default:
+        return 'Pass';
+    }
+  };
+
   return (
     <div className="flex flex-col items-center w-full">
       {/* 截圖外層 Wrapper：給予 padding 避免卡片本身的陰影被切掉 */}
       <div className="w-full flex justify-center">
         <div
           ref={ref}
-          className={`${agent.color} ${styles.card} w-[540px] h-[300px] rounded-[24px] overflow-hidden relative flex border-4 border-white shadow-xl`}
+          className={`${agent.color} ${styles.card} w-[540px] h-[340px] rounded-[24px] overflow-hidden relative flex border-4 border-white shadow-xl`}
         >
           <div
             className={`${styles.overlay} ${styles[`pattern_${agent.id}` as keyof typeof styles] ?? ''}`}
@@ -102,7 +123,7 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
               </div>
 
               <div className="absolute left-4 right-4 top-[74px] bottom-4 flex items-center justify-center">
-                <div className="w-[190px] h-[190px] rounded-2xl overflow-hidden bg-white/60 border-[3px] border-white/90 shadow-lg">
+                <div className="w-[200px] h-[200px] rounded-2xl overflow-hidden bg-white/60 border-[3px] border-white/90 shadow-lg">
                   <img
                     src={generatedImage}
                     alt="Agent"
@@ -114,53 +135,70 @@ export const PassportCard = React.forwardRef<HTMLDivElement, PassportCardProps>(
             </div>
 
             {/* 右側：文字欄 */}
-            <div className="flex-1 flex flex-col px-5 py-4 pl-3">
-              <div className="mb-2.5">
-                <div className="text-[18px] font-black text-black/80 leading-tight">
-                  {agent.title} ({agent.id}) {passportSuffix}
+            <div className="flex-1 flex flex-col pr-5 pl-0 py-4 pb-16">
+              {/* 標題列：改成參考圖的兩行，避免 Flow-Pass 斷行 */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[34px] font-black text-black/80 leading-none truncate">
+                    {agent.name}
+                  </div>
+                  <div className="mt-2 text-[20px] font-black text-veggie-green whitespace-nowrap">
+                    {agent.title} PASSPORT
+                  </div>
+                  <div className="mt-1 text-[12px] font-black text-black/55 whitespace-nowrap">
+                    {getPassportLabel(agent.id)}
+                  </div>
                 </div>
-                <div className="text-[12px] font-black text-black/55 mt-1">
+
+                <div className="shrink-0 bg-veggie-green text-white font-black px-5 py-2 rounded-full shadow-lg whitespace-nowrap">
                   Name: {userName}
                 </div>
               </div>
 
-              <div className="flex-1 bg-white/60 border-2 border-white/90 rounded-2xl px-3 py-2 shadow-sm">
-                <div className="text-[12px] font-black text-black/70 mb-1">
-                  Type: {agent.title} ({agent.id})
-                </div>
-                <div className="text-[12px] font-extrabold text-black/65 mb-1.5">
-                  Traits: {agent.description}
-                </div>
+              {/* Hashtags */}
+              <div className="mt-4 flex flex-wrap gap-3">
+                {agent.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="text-[16px] font-black text-veggie-green bg-white/80 px-5 py-2 rounded-full border-2 border-white/90 shadow-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
 
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {agent.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="text-[11px] font-black text-black/65 bg-white/75 px-2 py-0.5 rounded-full border border-black/5"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+              {/* Ability bars（確保三條都可見） */}
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Leaf className="text-veggie-green" size={28} strokeWidth={2.5} />
+                  <progress className={`${styles.progress} ${styles.progressGreen}`} value={strictness} max={100} />
                 </div>
-
-                <div className="text-[12px] font-black text-black/70 mb-1">
-                  Quote: <span className="font-extrabold text-black/65">「{agent.quote}」</span>
+                <div className="flex items-center gap-3">
+                  <Heart className="text-amber-600" size={28} strokeWidth={2.5} />
+                  <progress className={`${styles.progress} ${styles.progressAmber}`} value={foodieLevel} max={100} />
                 </div>
-                <div className="text-[12px] font-black text-black/70">
-                  Diet Advice: <span className="font-extrabold text-black/65">{agent.advice}</span>
+                <div className="flex items-center gap-3">
+                  <Zap className="text-red-600" size={28} strokeWidth={2.5} />
+                  <progress className={`${styles.progress} ${styles.progressRed}`} value={ecoPower} max={100} />
                 </div>
               </div>
 
-              <div className="mt-2.5">
-                {renderAbilityBar('嚴謹度', strictness, styles.progressGreen)}
-                {renderAbilityBar('美食力', foodieLevel, styles.progressAmber)}
-                {renderAbilityBar('行動力', ecoPower, styles.progressRed)}
+              {/* Diet Advice pill */}
+              <div className="mt-auto pt-6">
+                <div className="relative bg-white/95 rounded-3xl shadow-lg px-8 py-5">
+                  <div className="absolute -top-4 left-6 bg-amber-300 text-amber-900 font-black px-5 py-2 rounded-full shadow-sm">
+                    Diet Advice
+                  </div>
+                  <div className="text-center text-[20px] font-black text-veggie-green">
+                    「{agent.quote}」
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="absolute right-4 bottom-4 w-[54px] h-[54px] rounded-full bg-white/75 border-[3px] border-white/95 shadow-lg flex items-center justify-center text-black/55">
-            <StampIcon size={26} strokeWidth={2.5} />
+          <div className="absolute right-4 bottom-4 w-[48px] h-[48px] rounded-full bg-white/75 border-[3px] border-white/95 shadow-lg flex items-center justify-center text-black/55 pointer-events-none">
+            <StampIcon size={24} strokeWidth={2.5} />
           </div>
         </div>
       </div>
