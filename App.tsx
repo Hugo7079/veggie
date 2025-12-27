@@ -41,10 +41,14 @@ const App: React.FC = () => {
   const [generatedPassportUrl, setGeneratedPassportUrl] = useState<string | null>(null);
   const [agentChatSession, setAgentChatSession] = useState<any>(null);
   const [isPassportDownloading, setIsPassportDownloading] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const passportRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -203,6 +207,73 @@ const App: React.FC = () => {
     }
   };
 
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
+      });
+      setCameraStream(stream);
+      setIsCameraActive(true);
+      
+      // 等待一會兒讓 videoRef 更新
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (err) {
+      console.error('無法訪問相機:', err);
+      alert('無法開啟相機，請檢查相機權限或使用上傳照片功能。');
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        setUserPhoto(dataUrl);
+        stopCamera();
+      }
+    }
+  };
+
+  // 清理相機資源
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  const handleReset = () => {
+    stopCamera();
+    setMode('LANDING');
+    setMessages([]);
+    setInput('');
+    setIsLoading(false);
+    setResultType(null);
+    setUserName('');
+    setUserPhoto(null);
+    setGeneratedPassportUrl(null);
+    setAgentChatSession(null);
+    setIsCameraActive(false);
+  };
+
   const handlePassportGeneration = async () => {
      if (!userPhoto || !resultType) return;
      
@@ -256,6 +327,17 @@ const App: React.FC = () => {
       <div className="w-full max-w-5xl px-6 md:px-12 flex justify-between items-start mb-6 relative flex-shrink-0">
          <HanHanIllustration />
          <div className="flex items-center gap-4">
+           {/* Reset Button - only show in chat modes */}
+           {(mode === 'ASSESSMENT' || mode === 'RESULT' || mode === 'PASSPORT' || mode === 'PASSPORT_UPLOAD') && (
+             <button
+               onClick={handleReset}
+               className="bg-white text-veggie-green font-black px-6 py-3 rounded-xl border-2 border-veggie-green hover:bg-veggie-chip transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-2"
+               title="重新開始"
+             >
+               <RefreshCcw size={20} />
+               重新開始
+             </button>
+           )}
            {/* API Key Manager to the left of logo */}
            <ApiKeyManager />
            <VeggieLogo />
@@ -268,8 +350,8 @@ const App: React.FC = () => {
          {/* LANDING MODE */}
          {mode === 'LANDING' && (
            <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-10">
-              <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center border-4 border-veggie-green shadow-sm animate-bounce">
-                 <img src="https://api.iconify.design/lucide:sprout.svg?color=%230E705D" className="w-24 h-24" alt="Sprout" />
+              <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center border-4 border-veggie-green shadow-sm animate-bounce flex-shrink-0">
+                 <img src="https://api.iconify.design/lucide:sprout.svg?color=%230E705D" className="w-24 h-24 object-contain" alt="Sprout" />
               </div>
               <div className="space-y-4">
                   <h2 className="text-3xl md:text-4xl font-black text-veggie-dark tracking-wide">
@@ -417,13 +499,16 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-[#FEFCE8] w-full max-w-xl rounded-[32px] p-10 shadow-2xl relative animate-fade-in border-4 border-veggie-green text-center">
                 <button 
-                    onClick={() => setMode('RESULT')} 
+                    onClick={() => {
+                      stopCamera();
+                      setMode('RESULT');
+                    }} 
                     className="absolute top-6 right-6 text-gray-400 hover:text-veggie-dark transition-colors"
                 >
                     <X size={32} />
                 </button>
 
-                {!userPhoto ? (
+                {!userPhoto && !isCameraActive ? (
                     <div className="space-y-8">
                         <div className="w-24 h-24 mx-auto bg-veggie-green rounded-full flex items-center justify-center shadow-lg">
                             <ImageIcon size={48} className="text-white" />
@@ -433,11 +518,51 @@ const App: React.FC = () => {
                             請提供一張您的<br/>美美的照片給我吧！
                         </h2>
                         
-                        <div 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="bg-veggie-chip hover:bg-[#E6EE9C] text-veggie-dark font-black text-xl py-5 px-12 rounded-2xl cursor-pointer transition-all shadow-md hover:scale-105 active:scale-95 inline-block"
-                        >
-                            上傳照片
+                        <div className="flex flex-col gap-4">
+                            <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="bg-veggie-chip hover:bg-[#E6EE9C] text-veggie-dark font-black text-xl py-5 px-12 rounded-2xl cursor-pointer transition-all shadow-md hover:scale-105 active:scale-95"
+                            >
+                                上傳照片
+                            </div>
+                            
+                            <div 
+                                onClick={startCamera}
+                                className="bg-veggie-green hover:bg-[#0B5C4D] text-white font-black text-xl py-5 px-12 rounded-2xl cursor-pointer transition-all shadow-md hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                <Camera size={24} />
+                                使用相機拍照
+                            </div>
+                        </div>
+                    </div>
+                ) : isCameraActive ? (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-black text-veggie-dark">對準鏡頭並拍照</h2>
+                        
+                        <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden border-4 border-veggie-green shadow-xl bg-black">
+                            <video 
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                className="w-full h-auto"
+                            />
+                        </div>
+                        
+                        <div className="flex gap-4 justify-center">
+                            <button 
+                                onClick={capturePhoto}
+                                className="bg-veggie-green text-white font-black text-xl py-4 px-8 rounded-2xl shadow-lg hover:bg-[#0B5C4D] hover:scale-105 transition-transform flex items-center gap-3"
+                            >
+                                <Camera size={24} />
+                                拍照
+                            </button>
+                            
+                            <button 
+                                onClick={stopCamera}
+                                className="bg-gray-500 text-white font-black text-xl py-4 px-8 rounded-2xl shadow-lg hover:bg-gray-600 hover:scale-105 transition-transform"
+                            >
+                                取消
+                            </button>
                         </div>
                     </div>
                 ) : (
@@ -472,6 +597,7 @@ const App: React.FC = () => {
                 )}
                 
                 <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
+                <canvas ref={canvasRef} className="hidden" />
             </div>
         </div>
       )}
